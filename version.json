@@ -1,6 +1,6 @@
 {
-  "version": "1.2.9",
+  "version": "1.2.10",
   "download": "./index.html",
-  "filename": "score-image-viewer-v1.2.9.html",
-  "notes": "폴더 카드를 눌러 파일명 순으로 목록 표시"
+  "filename": "score-image-viewer-v1.2.10.html",
+  "notes": "다크모드 검색창 입력 글자 가독성 수정"
 }

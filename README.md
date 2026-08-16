@@ -88,4 +88,4 @@ JPG, PNG, WEBP, GIF, BMP, HEIC/HEIF 파일을 대상으로 검색합니다. 브�
 
 ## 버전
 
-v1.2.9
+v1.2.10
