@@ -1,0 +1,7 @@
+1. ZIP 파일을 풀어 주세요.
+2. GitHub의 -score-image-viewer 저장소를 여세요.
+3. Add file → Upload files를 누르세요.
+4. index.html, README.md, .gitignore 파일을 올리세요.
+5. Commit changes를 누르세요.
+
+아이폰에서는 파일 앱에서 ZIP을 한 번 누르면 압축이 풀립니다.

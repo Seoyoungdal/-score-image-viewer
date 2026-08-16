@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=yes">
+  <meta name="theme-color" content="#0f1115">
+  <title>악보 이미지 뷰어</title>
+  <style>
+    :root{--bg:#0f1115;--panel:#191c22;--line:#303640;--text:#f7f7f8;--muted:#9da3ad;--accent:#ff641f}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR",sans-serif}.app{min-height:100svh;display:flex;flex-direction:column}.top{position:sticky;top:0;z-index:5;padding:max(18px,env(safe-area-inset-top)) 18px 15px;background:rgba(15,17,21,.94);backdrop-filter:blur(18px);border-bottom:1px solid var(--line)}.bar{display:flex;align-items:center;gap:12px}.logo{width:50px;height:50px;border-radius:15px;background:var(--accent);display:grid;place-items:center;font-size:29px}.title{flex:1}.title h1{font-size:22px;margin:0}.title small{color:var(--muted)}button{border:0;font:inherit;cursor:pointer}.iconBtn{width:48px;height:48px;border-radius:14px;background:var(--panel);color:var(--text);font-size:22px}.searchWrap{display:flex;gap:10px;margin-top:15px}.searchBox{flex:1;display:flex;align-items:center;background:#fff;border-radius:16px;padding:0 8px 0 16px}.searchBox input{min-width:0;flex:1;height:54px;border:0;outline:0;font-size:19px;background:transparent}.clear{width:40px;height:40px;border-radius:50%;background:#e8e9eb;color:#555;font-size:21px}.searchBtn{min-width:74px;border-radius:16px;background:var(--accent);color:#111;font-weight:800}.status{padding:12px 19px;color:var(--muted);font-size:14px}.grid{padding:0 16px 36px;display:grid;gap:12px}.item{display:flex;gap:14px;align-items:center;width:100%;padding:12px;background:var(--panel);border:1px solid var(--line);border-radius:18px;color:var(--text);text-align:left}.thumb{width:74px;height:92px;object-fit:cover;border-radius:9px;background:#fff}.meta{min-width:0}.name{font-size:17px;font-weight:750;word-break:break-all}.path{margin-top:7px;color:var(--muted);font-size:13px;word-break:break-all}.empty{margin:auto;padding:70px 26px;text-align:center;color:var(--muted)}.empty b{display:block;color:var(--text);font-size:22px;margin-bottom:10px}.viewer{position:fixed;inset:0;z-index:20;background:#000;display:none;overflow:auto;overscroll-behavior:contain;touch-action:pan-x pan-y pinch-zoom}.viewer.show{display:flex;align-items:flex-start;justify-content:center}.viewer img{display:block;max-width:100%;width:auto;height:auto;min-height:0;margin:auto;object-fit:contain}.viewerHint{position:fixed;top:max(12px,env(safe-area-inset-top));left:50%;transform:translateX(-50%);padding:8px 12px;border-radius:20px;background:#000a;color:#ddd;font-size:12px;pointer-events:none}.modal{position:fixed;inset:0;z-index:30;background:#000a;display:none;align-items:flex-end}.modal.show{display:flex}.sheet{width:100%;max-width:640px;margin:auto;background:var(--panel);border-radius:24px 24px 0 0;padding:24px 18px calc(24px + env(safe-area-inset-bottom))}.sheet h2{margin:0 0 20px}.field{display:grid;gap:7px;margin:14px 0}.field input{height:50px;border:1px solid var(--line);border-radius:13px;background:#101216;color:#fff;padding:0 14px;font-size:17px}.wide{width:100%;height:52px;border-radius:14px;background:var(--accent);font-weight:800;margin-top:9px}.secondary{background:#303640;color:#fff}.close{margin-top:16px;background:transparent;color:var(--muted)}input[type=file]{display:none}@media(min-width:760px){.grid{grid-template-columns:repeat(3,1fr);max-width:1100px;margin:auto}.sheet{border-radius:24px;margin:auto}.modal{align-items:center}}
+  </style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <div class="bar"><div class="logo">♫</div><div class="title"><h1 id="appTitle">악보 이미지 뷰어</h1><small>번호 · 제목 검색</small></div><button class="iconBtn" id="settings" aria-label="설정">⚙</button></div>
+    <div class="searchWrap"><div class="searchBox"><input id="q" autocomplete="off" placeholder="번호 또는 제목을 입력하세요"><button class="clear" id="clear" aria-label="검색어 지우기">×</button></div><button class="searchBtn" id="search">검색</button></div>
+  </header>
+  <div class="status" id="status">설정에서 악보 폴더를 선택해 주세요.</div>
+  <main class="grid" id="results"><div class="empty"><b>악보 폴더를 선택해 주세요</b>설정 ⚙ → 악보집 폴더 선택</div></main>
+</div>
+<div class="viewer" id="viewer"><div class="viewerHint">두 번 탭하면 검색 화면으로 돌아갑니다</div><img id="fullImage" alt="선택한 악보"></div>
+<div class="modal" id="modal"><section class="sheet"><h2>설정</h2><label class="field">프로그램 이름<input id="nameInput" maxlength="30"></label><button class="wide" id="saveName">이름 저장</button><button class="wide secondary" id="choose">악보집 폴더 선택 / 새로고침</button><input type="file" id="folder" webkitdirectory directory multiple accept="image/*,.heic,.heif"><button class="wide secondary" id="download">오프라인 파일 다운로드</button><button class="wide close" id="close">닫기</button><p style="color:var(--muted);font-size:13px;line-height:1.6">새 이미지를 폴더에 넣은 뒤에는 이 화면에서 같은 폴더를 다시 선택해 주세요. 하위 폴더의 이미지도 모두 검색합니다.<br>버전 1.2.3</p></section></div>
+<script>
+const $=s=>document.querySelector(s), q=$('#q'), results=$('#results'), status=$('#status'), folder=$('#folder');
+let files=[], urls=[]; const imageExt=/\.(jpe?g|png|webp|gif|bmp|heic|heif)$/i;
+const normalize=s=>s.toLowerCase().replace(/\.[^.]+$/,'').replace(/[\s_\-–—.]+/g,'');
+function clearUrls(){urls.forEach(URL.revokeObjectURL);urls=[]}
+function applyName(){const n=localStorage.getItem('scoreViewerName')||'악보 이미지 뷰어';$('#appTitle').textContent=n;document.title=n;$('#nameInput').value=n}
+function show(list){results.innerHTML='';status.textContent=files.length?`${list.length}개 검색됨 · 전체 ${files.length}개`:'설정에서 악보 폴더를 선택해 주세요.';if(!list.length){results.innerHTML='<div class="empty"><b>검색 결과가 없습니다</b>번호, 제목 일부 또는 폴더명을 입력해 보세요.</div>';return}list.forEach(f=>{const u=URL.createObjectURL(f);urls.push(u);const b=document.createElement('button');b.className='item';const path=f.webkitRelativePath||f.name;b.innerHTML=`<img class="thumb" src="${u}" alt=""><div class="meta"><div class="name"></div><div class="path"></div></div>`;b.querySelector('.name').textContent=f.name.replace(/\.[^.]+$/,'');b.querySelector('.path').textContent=path;b.onclick=()=>openImage(f);results.appendChild(b)})}
+function search(){clearUrls();const raw=q.value.trim(), n=normalize(raw);if(!n){show(files);return}const tokens=raw.split(/\s+/).map(normalize).filter(Boolean);show(files.filter(f=>{const hay=normalize((f.webkitRelativePath||'')+' '+f.name);return hay.includes(n)||tokens.every(t=>hay.includes(t))}))}
+function openImage(f){const u=URL.createObjectURL(f);$('#fullImage').src=u;$('#fullImage').dataset.url=u;$('#viewer').classList.add('show')}
+function closeViewer(){const im=$('#fullImage');if(im.dataset.url)URL.revokeObjectURL(im.dataset.url);im.src='';im.dataset.url='';$('#viewer').classList.remove('show');q.value='';search()}
+folder.onchange=()=>{clearUrls();files=[...folder.files].filter(f=>f.type.startsWith('image/')||imageExt.test(f.name));q.value='';search();$('#modal').classList.remove('show')};
+$('#choose').onclick=()=>folder.click();$('#search').onclick=search;q.onkeydown=e=>{if(e.key==='Enter')search()};$('#clear').onclick=()=>{q.value='';q.focus();search()};
+$('#settings').onclick=()=>{$('#modal').classList.add('show');applyName()};$('#close').onclick=()=>$('#modal').classList.remove('show');$('#modal').onclick=e=>{if(e.target.id==='modal')e.currentTarget.classList.remove('show')};
+$('#saveName').onclick=()=>{localStorage.setItem('scoreViewerName',$('#nameInput').value.trim()||'악보 이미지 뷰어');applyName()};
+$('#viewer').ondblclick=closeViewer;let lastTap=0;$('#viewer').addEventListener('touchend',e=>{const now=Date.now();if(now-lastTap<320){e.preventDefault();closeViewer()}lastTap=now},{passive:false});
+$('#download').onclick=()=>{const a=document.createElement('a');a.href=location.href;a.download='score-image-viewer-v1.2.3.html';a.click()};
+window.addEventListener('pageshow',()=>{q.value=''});applyName();q.value='';
+</script>
+</body></html>
+
