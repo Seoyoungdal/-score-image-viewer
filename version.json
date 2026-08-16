@@ -1,6 +1,6 @@
 {
-  "version": "1.2.6",
+  "version": "1.2.7",
   "download": "./index.html",
-  "filename": "score-image-viewer-v1.2.6.html",
-  "notes": "폴더별 파일 수, 고정 상단 메뉴, 설정 화면 정리"
+  "filename": "score-image-viewer-v1.2.7.html",
+  "notes": "최신 버전 자동 적용 방식 개선"
 }
