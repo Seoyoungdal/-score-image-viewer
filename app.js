@@ -1,6 +1,6 @@
 (()=>{
   'use strict';
-  const VERSION='1.3.0';
+  const VERSION='1.3.1';
   const DB_NAME='scoreImageViewer';
   const DB_VERSION=1;
   const STORE='scores';
@@ -14,7 +14,7 @@
   let currentObjectUrl='';
   let selectedId='';
   let hintTimer;
-  let zoom={scale:1,x:0,y:0,startDist:0,startScale:1,startX:0,startY:0,lastTap:0};
+  let zoom={scale:1,x:0,y:0,startDist:0,startScale:1,startX:0,startY:0,tapCount:0,lastTap:0,moved:false};
   const collator=new Intl.Collator('ko',{numeric:true,sensitivity:'base'});
 
   const icons={
@@ -126,15 +126,16 @@
   function revokeObjectUrl(){if(currentObjectUrl){URL.revokeObjectURL(currentObjectUrl);currentObjectUrl=''}}
   function openViewer(item){revokeObjectUrl();currentObjectUrl=URL.createObjectURL(item.blob);els.viewerImage.src=currentObjectUrl;els.viewerTitle.textContent=item.title;els.viewerPath.textContent=item.path;els.viewer.classList.remove('hidden');document.body.style.overflow='hidden';resetZoom();els.viewerHint.classList.remove('hide');clearTimeout(hintTimer);hintTimer=setTimeout(()=>els.viewerHint.classList.add('hide'),1800);localStorage.setItem('scoreRecent',JSON.stringify([item.id,...getRecent().filter(x=>x!==item.id)].slice(0,30)))}
   function closeViewer(){els.viewer.classList.add('hidden');document.body.style.overflow='';resetZoom()}
-  function resetZoom(){zoom.scale=1;zoom.x=0;zoom.y=0;applyTransform()}
+  function resetZoom(){zoom.scale=1;zoom.x=0;zoom.y=0;zoom.tapCount=0;zoom.lastTap=0;zoom.moved=false;applyTransform()}
   function applyTransform(){els.viewerImage.style.transform=`translate3d(${zoom.x}px,${zoom.y}px,0) scale(${zoom.scale})`}
   function getRecent(){try{return JSON.parse(localStorage.getItem('scoreRecent')||'[]')}catch{return[]}}
   function touchDistance(t){return Math.hypot(t[0].clientX-t[1].clientX,t[0].clientY-t[1].clientY)}
   function bindViewerGestures(){
-    els.viewerCanvas.addEventListener('touchstart',e=>{if(e.touches.length===2){zoom.startDist=touchDistance(e.touches);zoom.startScale=zoom.scale}else if(e.touches.length===1){zoom.startX=e.touches[0].clientX-zoom.x;zoom.startY=e.touches[0].clientY-zoom.y}}, {passive:true});
-    els.viewerCanvas.addEventListener('touchmove',e=>{if(e.touches.length===2){e.preventDefault();zoom.scale=Math.min(5,Math.max(1,zoom.startScale*touchDistance(e.touches)/zoom.startDist));applyTransform()}else if(e.touches.length===1&&zoom.scale>1){e.preventDefault();zoom.x=e.touches[0].clientX-zoom.startX;zoom.y=e.touches[0].clientY-zoom.startY;applyTransform()}},{passive:false});
-    els.viewerCanvas.addEventListener('touchend',e=>{if(e.touches.length===0){if(zoom.scale===1){zoom.x=0;zoom.y=0;applyTransform()}const now=Date.now();if(now-zoom.lastTap<320)closeViewer();zoom.lastTap=now}},{passive:true});
-    els.viewerCanvas.addEventListener('dblclick',closeViewer)
+    els.viewerCanvas.addEventListener('touchstart',e=>{zoom.moved=false;if(e.touches.length===2){zoom.startDist=touchDistance(e.touches);zoom.startScale=zoom.scale}else if(e.touches.length===1){zoom.startX=e.touches[0].clientX-zoom.x;zoom.startY=e.touches[0].clientY-zoom.y}}, {passive:true});
+    els.viewerCanvas.addEventListener('touchmove',e=>{zoom.moved=true;if(e.touches.length===2){e.preventDefault();zoom.scale=Math.min(5,Math.max(1,zoom.startScale*touchDistance(e.touches)/zoom.startDist));applyTransform()}else if(e.touches.length===1&&zoom.scale>1){e.preventDefault();zoom.x=e.touches[0].clientX-zoom.startX;zoom.y=e.touches[0].clientY-zoom.startY;applyTransform()}},{passive:false});
+    els.viewerCanvas.addEventListener('touchend',e=>{if(e.touches.length===0&&zoom.scale===1){zoom.x=0;zoom.y=0;applyTransform()}},{passive:true});
+    els.viewerCanvas.addEventListener('click',()=>{if(zoom.moved)return;const now=Date.now();zoom.tapCount=now-zoom.lastTap<420?zoom.tapCount+1:1;zoom.lastTap=now;if(zoom.tapCount>=3){zoom.tapCount=0;zoom.lastTap=0;closeViewer()}});
+    els.viewerCanvas.addEventListener('dblclick',e=>e.preventDefault())
   }
 
   async function importSelected(){const files=[...els.folderInput.files];els.folderInput.value='';if(!files.length)return;const usable=files.filter(f=>IMAGE_TYPES.test(f.name)||f.type.startsWith('image/'));const nextRoot=usable[0]?(usable[0].webkitRelativePath||usable[0].name).split('/')[0]:'';const roots=[...new Set(items.map(i=>i.root))];if(items.length&&nextRoot&&!roots.includes(nextRoot)){if(!confirm(`현재 악보집을 '${nextRoot}' 폴더의 내용으로 교체할까요?`))return;await dbClear();items=[]}els.importModal.classList.remove('hidden');els.importBar.style.width='0';els.importLabel.textContent='파일 확인 중…';try{await saveImport(files);await refreshItems();els.importLabel.textContent=`완료 · ${items.length.toLocaleString()}곡이 저장되어 있습니다.`;await new Promise(r=>setTimeout(r,650));els.importModal.classList.add('hidden');toast('악보집 업데이트를 완료했습니다.');setPage('home')}catch(err){els.importModal.classList.add('hidden');alert(err.message||'악보를 가져오지 못했습니다.')}}

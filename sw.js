@@ -1,4 +1,4 @@
-const CACHE='score-viewer-v1.3.0';
+const CACHE='score-viewer-v1.3.1';
 const ASSETS=['./','./index.html','./app.js','./site.webmanifest','./icon.svg','./icon-192.png','./icon-512.png','./version.json'];
 self.addEventListener('install',event=>event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(ASSETS)).then(()=>self.skipWaiting())));
 self.addEventListener('activate',event=>event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(key=>key!==CACHE).map(key=>caches.delete(key)))).then(()=>self.clients.claim())));
