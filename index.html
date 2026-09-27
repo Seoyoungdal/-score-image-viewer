@@ -3,9 +3,9 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
-  <meta name="theme-color" content="#20262d">
+  <meta name="theme-color" content="#f5f2ec">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="나의 악보집">
   <title>나의 악보집</title>
   <link rel="manifest" href="site.webmanifest">
@@ -43,7 +43,7 @@
     .viewer-canvas{display:block;width:100%;height:100%}
     .viewer-canvas img{position:absolute;left:50%;top:50%;width:0;height:0;max-width:none;max-height:none;object-fit:fill;transform-origin:center center}
     .viewer-status{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(80%,360px);text-align:center;color:#fff;font-size:14px;line-height:1.5;pointer-events:none}
-    @media(max-width:700px){.app{grid-template-rows:minmax(0,1fr)}.main{height:100%;min-height:0}.content.list-mode{padding-bottom:16px}.content.list-mode .list-layout{display:block;height:100%}.content.list-mode .list-panel{height:100%}.list-toolbar-actions .danger-btn{font-size:11px;padding:0 9px}}
+    @media(max-width:700px){.app{grid-template-rows:minmax(0,1fr)}.main{height:100%;min-height:0}.topbar{background:var(--bg);background-image:none}.content.list-mode{padding-bottom:16px}.content.list-mode .list-layout{display:block;height:100%}.content.list-mode .list-panel{height:100%}.list-toolbar-actions .danger-btn{font-size:11px;padding:0 9px}}
   </style>
 </head>
 <body>

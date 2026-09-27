@@ -1,6 +1,6 @@
 (()=>{
   'use strict';
-  const VERSION='1.3.3';
+  const VERSION='1.3.4';
   const DB_NAME='scoreImageViewer';
   const DB_VERSION=1;
   const STORE='scores';
