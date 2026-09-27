@@ -21,6 +21,25 @@
     .viewer{position:fixed;inset:0;z-index:60;background:#101419;color:#fff;display:flex;flex-direction:column;overflow:hidden}.viewer-bar{height:62px;padding:max(10px,env(safe-area-inset-top)) 14px 8px;display:flex;align-items:center;gap:12px;background:rgba(16,20,25,.94);flex:none}.viewer-bar button{width:42px;height:42px;border:0;border-radius:12px;background:rgba(255,255,255,.1);color:#fff;display:grid;place-items:center}.viewer-bar svg{width:20px}.viewer-info{min-width:0;flex:1}.viewer-info strong{display:block;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.viewer-info span{display:block;font-size:10px;color:#aeb7c0;margin-top:3px}.viewer-canvas{flex:1;min-height:0;display:grid;place-items:center;overflow:hidden;touch-action:none}.viewer-canvas img{display:block;width:100%;height:100%;object-fit:contain;object-position:center;background:transparent;transform-origin:center center;will-change:transform}.viewer-hint{position:absolute;top:74px;left:50%;transform:translateX(-50%);z-index:2;background:rgba(0,0,0,.68);color:#fff;border-radius:99px;padding:8px 13px;font-size:11px;white-space:nowrap;pointer-events:none;transition:opacity .25s}.viewer-hint.hide{opacity:0}.toast{position:fixed;z-index:100;left:50%;bottom:max(24px,env(safe-area-inset-bottom));transform:translate(-50%,20px);background:color-mix(in srgb,var(--text) 92%,transparent);color:var(--bg);border-radius:13px;padding:11px 15px;font-size:12px;opacity:0;pointer-events:none;transition:.22s}.toast.show{opacity:1;transform:translate(-50%,0)}
     @media(max-width:960px){.folder-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.list-layout{grid-template-columns:minmax(300px,44%) 1fr}.topbar{padding:18px}.content{padding:20px}}
     @media(max-width:700px){.app{grid-template-columns:1fr}.sidebar{position:fixed;z-index:25;left:12px;right:12px;bottom:max(10px,env(safe-area-inset-bottom));height:68px;border:1px solid var(--line);border-radius:21px;padding:7px;display:block;box-shadow:0 10px 30px var(--shadow)}.brand,.storage-info{display:none}.nav{grid-template-columns:repeat(3,1fr);height:100%}.nav-btn{height:100%;padding:0;justify-content:center;flex-direction:column;gap:3px;font-size:10px}.nav-btn svg{width:18px}.main{padding-bottom:82px}.topbar{height:auto;padding:max(14px,env(safe-area-inset-top)) 14px 12px;grid-template-columns:1fr auto;gap:8px}.search-wrap{grid-template-columns:1fr 48px}.top-actions .icon-btn:first-child{display:none}.content{padding:16px}.page-head{align-items:flex-start}.folder-grid,.result-grid{grid-template-columns:1fr}.list-layout{height:auto;display:block}.list-panel{height:calc(100dvh - 218px)}.preview{display:none}.page-head h1{font-size:21px}.empty{padding:40px 18px}.settings-card{padding:17px}.inline-form{grid-template-columns:1fr}.settings-actions>*{flex:1}.viewer-bar{height:auto}.viewer-canvas{padding:0}}
+    /* iOS 높이·스크롤 및 고정 미리보기 보정 */
+    .app{height:var(--app-height,100dvh);min-height:0;overflow:hidden;grid-template-rows:minmax(0,1fr)}
+    .main{height:100%;min-height:0}
+    .content{-webkit-overflow-scrolling:touch;overscroll-behavior:contain;touch-action:pan-y}
+    .content.list-mode{overflow:hidden}
+    .content.list-mode>.page{height:100%}
+    .list-layout{height:100%;min-height:0}
+    .list-panel{min-height:0}
+    .song-list{min-height:0;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+    .preview{min-height:0}
+    .preview-stage{background:#fff}
+    .preview-stage img{width:100%;height:100%;max-width:none;max-height:none;object-fit:contain;background:#fff}
+    .list-toolbar-actions{display:flex;align-items:center;gap:8px}
+    .list-toolbar-actions .danger-btn{min-height:40px;padding:0 11px}
+    /* 전체화면 메뉴는 악보 위에 겹쳐 표시하고 자동 숨김 */
+    .viewer-bar{position:absolute;z-index:4;left:0;right:0;top:0;height:auto;min-height:62px;transition:opacity .2s ease,transform .2s ease}
+    .viewer-canvas{position:absolute;inset:0}
+    .viewer.controls-hidden .viewer-bar{opacity:0;transform:translateY(-110%);pointer-events:none}
+    @media(max-width:700px){.app{grid-template-rows:minmax(0,1fr)}.main{height:100%;min-height:0}.content.list-mode{padding-bottom:16px}.content.list-mode .list-layout{display:block;height:100%}.content.list-mode .list-panel{height:100%}.list-toolbar-actions .danger-btn{font-size:11px;padding:0 9px}}
   </style>
 </head>
 <body>
@@ -36,6 +55,7 @@
     </section>
   </div>
   <input id="folderInput" type="file" accept="image/*,.heic,.heif" webkitdirectory multiple hidden>
+  <div class="modal hidden" id="importWarning" role="dialog" aria-modal="true" aria-labelledby="importWarningTitle"><div class="modal-card"><div class="modal-head"><div><h2 id="importWarningTitle">악보집 가져오기</h2><p>선택한 폴더의 이미지가 이 기기의 앱 저장공간에 복사됩니다.<br><br>웹앱이나 Safari 웹사이트 데이터를 삭제하면 앱에 저장된 악보가 사라질 수 있으므로, 원본은 파일 앱 또는 iCloud에 보관해 주세요.</p></div></div><div class="modal-actions"><button class="secondary-btn" id="cancelImport" type="button">취소</button><button class="action-btn" id="continueImport" type="button">폴더 선택</button></div></div></div>
   <div class="modal hidden" id="importModal" role="dialog" aria-modal="true" aria-labelledby="importTitle"><div class="modal-card"><div class="modal-head"><div><h2 id="importTitle">악보집 가져오는 중</h2><p>이미지를 기기 안의 앱 저장공간에 복사하고 있습니다.<br>이 화면을 닫지 마세요.</p></div></div><div class="progress-track"><div class="progress-bar" id="importBar"></div></div><div class="progress-label" id="importLabel">준비 중…</div></div></div>
   <div class="viewer hidden" id="viewer"><div class="viewer-hint" id="viewerHint">세 번 누르면 목록으로 돌아갑니다</div><div class="viewer-bar"><button id="closeViewer" aria-label="닫기"><span data-icon="arrow-left"></span></button><div class="viewer-info"><strong id="viewerTitle"></strong><span id="viewerPath"></span></div><button id="resetZoom" aria-label="확대 초기화"><span data-icon="maximize"></span></button></div><div class="viewer-canvas" id="viewerCanvas"><img id="viewerImage" alt="선택한 악보"></div></div>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
