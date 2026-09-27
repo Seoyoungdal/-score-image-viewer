@@ -1,12 +1,12 @@
 (()=>{
   'use strict';
-  const VERSION='1.3.2';
+  const VERSION='1.3.3';
   const DB_NAME='scoreImageViewer';
   const DB_VERSION=1;
   const STORE='scores';
   const IMAGE_TYPES=/\.(png|jpe?g|webp|gif|bmp|heic|heif)$/i;
   const $=id=>document.getElementById(id);
-  const els={content:$('content'),searchForm:$('searchForm'),searchInput:$('searchInput'),clearSearch:$('clearSearch'),folderInput:$('folderInput'),importWarning:$('importWarning'),importModal:$('importModal'),importBar:$('importBar'),importLabel:$('importLabel'),brandTitle:$('brandTitle'),offlineStatus:$('offlineStatus'),storageSummary:$('storageSummary'),viewer:$('viewer'),viewerImage:$('viewerImage'),viewerCanvas:$('viewerCanvas'),viewerTitle:$('viewerTitle'),viewerPath:$('viewerPath'),viewerHint:$('viewerHint'),toast:$('toast')};
+  const els={content:$('content'),searchForm:$('searchForm'),searchInput:$('searchInput'),clearSearch:$('clearSearch'),folderInput:$('folderInput'),importWarning:$('importWarning'),importModal:$('importModal'),importBar:$('importBar'),importLabel:$('importLabel'),brandTitle:$('brandTitle'),offlineStatus:$('offlineStatus'),storageSummary:$('storageSummary'),viewer:$('viewer'),viewerImage:$('viewerImage'),viewerCanvas:$('viewerCanvas'),viewerStatus:$('viewerStatus'),viewerTitle:$('viewerTitle'),viewerPath:$('viewerPath'),viewerHint:$('viewerHint'),toast:$('toast')};
   let db;
   let items=[];
   let currentPage='home';
@@ -49,8 +49,15 @@
   function formatBytes(bytes){if(!Number.isFinite(bytes))return '';if(bytes<1024*1024)return `${Math.round(bytes/1024)}KB`;return `${(bytes/1024/1024).toFixed(1)}MB`}
   function toast(message){const el=els.toast;el.textContent=message;el.classList.add('show');clearTimeout(el._timer);el._timer=setTimeout(()=>el.classList.remove('show'),2200)}
   function updateViewportHeight(){
-    const height=window.visualViewport?.height||window.innerHeight;
-    document.documentElement.style.setProperty('--app-height',`${Math.round(height)}px`);
+    const viewport=window.visualViewport;
+    const height=viewport?.height||window.innerHeight;
+    const root=document.documentElement.style;
+    root.setProperty('--app-height',`${height}px`);
+    root.setProperty('--viewer-width',`${viewport?.width||window.innerWidth}px`);
+    root.setProperty('--viewer-height',`${height}px`);
+    root.setProperty('--viewer-left',`${viewport?.offsetLeft||0}px`);
+    root.setProperty('--viewer-top',`${viewport?.offsetTop||0}px`);
+    if(!els.viewer.classList.contains('hidden')){resetZoom();fitViewerImage()}
   }
 
   function openDb(){return new Promise((resolve,reject)=>{const req=indexedDB.open(DB_NAME,DB_VERSION);req.onupgradeneeded=()=>{const d=req.result;if(!d.objectStoreNames.contains(STORE)){const store=d.createObjectStore(STORE,{keyPath:'id'});store.createIndex('folder','folder');store.createIndex('updatedAt','updatedAt')}};req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error)})}
@@ -155,10 +162,31 @@
   async function applyUpdate(){try{const regs=await navigator.serviceWorker?.getRegistrations();await Promise.all((regs||[]).map(r=>r.unregister()));const keys=await caches.keys();await Promise.all(keys.map(k=>caches.delete(k)));location.replace(`${location.pathname}?updated=${Date.now()}`)}catch{location.reload(true)}}
 
   function setViewerControls(show,autoHide=true){clearTimeout(viewerUiTimer);els.viewer.classList.toggle('controls-hidden',!show);if(show&&autoHide)viewerUiTimer=setTimeout(()=>els.viewer.classList.add('controls-hidden'),2200)}
-  function openViewer(item){revokeViewerUrl();viewerObjectUrl=URL.createObjectURL(item.blob);els.viewerImage.src=viewerObjectUrl;els.viewerTitle.textContent=item.title;els.viewerPath.textContent=item.path;els.viewer.classList.remove('hidden');document.body.style.overflow='hidden';resetZoom();setViewerControls(true);els.viewerHint.classList.remove('hide');clearTimeout(hintTimer);hintTimer=setTimeout(()=>els.viewerHint.classList.add('hide'),1800);localStorage.setItem('scoreRecent',JSON.stringify([item.id,...getRecent().filter(x=>x!==item.id)].slice(0,30)))}
-  function closeViewer(){clearTimeout(viewerUiTimer);clearTimeout(viewerTapTimer);els.viewer.classList.add('hidden');els.viewer.classList.remove('controls-hidden');document.body.style.overflow='';els.viewerImage.removeAttribute('src');revokeViewerUrl();resetZoom()}
+  function fitViewerImage(){
+    const image=els.viewerImage,canvas=els.viewerCanvas;
+    if(!image.naturalWidth||!image.naturalHeight)return;
+    const width=canvas.clientWidth,height=canvas.clientHeight;
+    if(!width||!height)return;
+    const fit=Math.min(width/image.naturalWidth,height/image.naturalHeight);
+    image.style.width=`${image.naturalWidth*fit}px`;
+    image.style.height=`${image.naturalHeight*fit}px`;
+    applyTransform();
+  }
+  function openViewer(item){
+    revokeViewerUrl();viewerObjectUrl=URL.createObjectURL(item.blob);
+    els.viewerTitle.textContent=item.title;els.viewerPath.textContent=item.path;
+    els.viewerImage.style.visibility='hidden';els.viewerImage.style.width='0';els.viewerImage.style.height='0';
+    els.viewerStatus.textContent='악보 불러오는 중…';els.viewerStatus.classList.remove('hidden');
+    els.viewer.classList.remove('hidden');document.body.style.overflow='hidden';updateViewportHeight();setViewerControls(true);
+    els.viewerImage.onload=()=>{fitViewerImage();els.viewerImage.style.visibility='visible';els.viewerStatus.classList.add('hidden')};
+    els.viewerImage.onerror=()=>{els.viewerStatus.textContent='악보를 표시할 수 없습니다. 다른 이미지로 다시 확인해 주세요.'};
+    els.viewerImage.src=viewerObjectUrl;
+    els.viewerHint.classList.remove('hide');clearTimeout(hintTimer);hintTimer=setTimeout(()=>els.viewerHint.classList.add('hide'),1800);
+    localStorage.setItem('scoreRecent',JSON.stringify([item.id,...getRecent().filter(x=>x!==item.id)].slice(0,30)));
+  }
+  function closeViewer(){clearTimeout(viewerUiTimer);clearTimeout(viewerTapTimer);els.viewer.classList.add('hidden');els.viewer.classList.remove('controls-hidden');document.body.style.overflow='';els.viewerImage.onload=null;els.viewerImage.onerror=null;els.viewerImage.removeAttribute('src');revokeViewerUrl();resetZoom()}
   function resetZoom(){zoom.scale=1;zoom.x=0;zoom.y=0;zoom.tapCount=0;zoom.lastTap=0;zoom.moved=false;applyTransform()}
-  function applyTransform(){els.viewerImage.style.transform=`translate3d(${zoom.x}px,${zoom.y}px,0) scale(${zoom.scale})`}
+  function applyTransform(){els.viewerImage.style.transform=`translate(-50%,-50%) translate3d(${zoom.x}px,${zoom.y}px,0) scale(${zoom.scale})`}
   function getRecent(){try{return JSON.parse(localStorage.getItem('scoreRecent')||'[]')}catch{return[]}}
   function touchDistance(t){return Math.hypot(t[0].clientX-t[1].clientX,t[0].clientY-t[1].clientY)}
   function bindViewerGestures(){
@@ -175,7 +203,7 @@
     els.searchInput.oninput=()=>els.clearSearch.classList.toggle('hidden',!els.searchInput.value);els.clearSearch.onclick=()=>{els.searchInput.value='';els.clearSearch.classList.add('hidden');els.searchInput.focus();setPage('home')};els.searchForm.onsubmit=e=>{e.preventDefault();if(!els.searchInput.value.trim()){toast('검색어를 입력해 주세요.');return}currentPage='search';document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));render()};
     $('cancelImport').onclick=hideImportWarning;$('continueImport').onclick=()=>{hideImportWarning();els.folderInput.click()};els.importWarning.onclick=e=>{if(e.target===els.importWarning)hideImportWarning()};
     $('closeViewer').onclick=closeViewer;$('resetZoom').onclick=()=>{resetZoom();setViewerControls(true)};bindViewerGestures();document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!els.viewer.classList.contains('hidden'))closeViewer()});
-    window.addEventListener('resize',updateViewportHeight);window.visualViewport?.addEventListener('resize',updateViewportHeight);window.addEventListener('orientationchange',()=>setTimeout(()=>{updateViewportHeight();if(!els.viewer.classList.contains('hidden'))resetZoom()},180));
+    window.addEventListener('resize',updateViewportHeight);window.visualViewport?.addEventListener('resize',updateViewportHeight);window.visualViewport?.addEventListener('scroll',updateViewportHeight);window.addEventListener('orientationchange',()=>setTimeout(updateViewportHeight,250));
     matchMedia('(prefers-color-scheme:dark)').addEventListener?.('change',()=>{if((localStorage.getItem('scoreTheme')||'system')==='system')applyTheme('system')})
   }
   async function init(){
